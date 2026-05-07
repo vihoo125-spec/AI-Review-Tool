@@ -48,7 +48,7 @@ def create_report_image(text, font_path="font.TTF"):
 # 主界面代码
 # ==========================================
 st.set_page_config(page_title="视觉设计专家评审台", layout="wide")
-st.title("👁️ Listing 方案一键评审台")
+st.title("👞 BM Listing 方案一键评审台")
 
 st.sidebar.header("⚙️ 核心配置")
 
@@ -97,7 +97,7 @@ if uploaded_file is not None:
                 st.markdown(response.text)
                 st.markdown("---")
                 
-                jpg_data = create_report_image(response.text, font_path="font.ttf")
+                jpg_data = create_report_image(response.text, font_path="font.TTF")
                 
                 col1, col2 = st.columns(2)
                 with col1:
