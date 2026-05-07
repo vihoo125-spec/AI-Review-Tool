@@ -38,7 +38,7 @@ if uploaded_file is not None:
                 try:
                     genai.configure(api_key=api_key)
                     # 调用目前最强大的多模态模型
-                    model = genai.GenerativeModel('gemini-1.5-pro')
+                    model = genai.GenerativeModel('gemini-1.5-pro-latest')
                     
                     system_prompt = f"""
                     你是一个冷静、客观且具有批判性思维的资深商业视觉设计专家。
