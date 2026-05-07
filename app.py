@@ -14,11 +14,8 @@ api_key = st.sidebar.text_input("1. 请输入您的 API Key", type="password")
 style_option = st.sidebar.selectbox(
     "2. 选择当前设计方案的主题风格", 
     [
-        "高奢鞋履/服饰纪实 (强调面料垂坠感与自然光影)", 
-        "8K超清珠宝静物 (强调极致微距与材质光泽)", 
-        "南欧城市街拍氛围 (强调复古胶片感与建筑背景层次)",
-        "智能化教育空间展示 (强调现代多媒体科技感)",
-        "通用亚马逊商业展示"
+        "BM 通用", 
+        "BM 真皮"
     ]
 )
 
@@ -38,7 +35,7 @@ if uploaded_file is not None:
                 try:
                     genai.configure(api_key=api_key)
                     # 调用目前最强大的多模态模型
-                    model = genai.GenerativeModel('gemini-1.5-pro-latest')
+                    model = genai.GenerativeModel('gemini-1.5-flash')
                     
                     system_prompt = f"""
                     你是一个冷静、客观且具有批判性思维的资深商业视觉设计专家。
