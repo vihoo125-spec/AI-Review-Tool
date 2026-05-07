@@ -7,7 +7,7 @@ import io
 # ==========================================
 # 辅助函数：将纯文本排版并渲染为高质量 JPG 长图
 # ==========================================
-def create_report_image(text, font_path="font.ttf"):
+def create_report_image(text, font_path="font.TTF"):
     lines = []
     for paragraph in text.split('\n'):
         wrapped = textwrap.wrap(paragraph, width=32) 
