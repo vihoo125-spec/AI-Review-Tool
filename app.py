@@ -21,12 +21,12 @@ style_option = st.sidebar.selectbox(
 # 3. 主界面：上传与预览区
 uploaded_file = st.file_uploader("请拖拽上传您的 A+ 页面或视觉方案 (支持 JPG/PNG)", type=['jpg', 'jpeg', 'png'])
 
- if uploaded_file is not None:
+if uploaded_file is not None:
     img = Image.open(uploaded_file)
     st.image(img, caption="当前待评审方案", use_container_width=True)
 
     # 4. 触发评审逻辑
-   if st.button("🚀 开始深度评审", type="primary"):
+if st.button("🚀 开始深度评审", type="primary"):
      with st.spinner("AI 视觉专家正在进行像素级分析，请稍候..."):
          try:
              # 核心修改：让代码从 Streamlit 的云端保险箱里读取密钥
