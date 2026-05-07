@@ -7,42 +7,53 @@ import io
 # ==========================================
 # 辅助函数：将纯文本排版并渲染为高质量 JPG 长图
 # ==========================================
-def create_report_image(text, font_path="font.TTF"):
+def create_report_image(text, font_path="font.ttf"):
+    # 1. 扩大图片画布尺寸和边距（从 800 扩大到 1200）
+    img_width = 1200
+    margin_x = 80
+    margin_y = 80
+    
+    # 2. 优化每行字数限制，绝对防止截断
     lines = []
     for paragraph in text.split('\n'):
-        wrapped = textwrap.wrap(paragraph, width=32) 
+        # 限制每行最多 38 个字符，留出充足的右侧呼吸感留白
+        wrapped = textwrap.wrap(paragraph, width=38) 
         if not wrapped:
             lines.append("")
         else:
             lines.extend(wrapped)
             
-    line_height = 40
-    img_height = max(800, len(lines) * line_height + 200)
+    # 3. 动态计算长图的整体高度
+    line_height = 46
+    img_height = max(1000, len(lines) * line_height + 300)
     
-    img = Image.new('RGB', (800, img_height), color=(24, 24, 28))
+    # 4. 创建深色高级感画布
+    img = Image.new('RGB', (img_width, img_height), color=(24, 24, 28))
     draw = ImageDraw.Draw(img)
     
+    # 5. 加载字体并调大字号
     try:
-        font = ImageFont.truetype(font_path, 24)
-        title_font = ImageFont.truetype(font_path, 36)
+        font = ImageFont.truetype(font_path, 28) # 正文加大到28
+        title_font = ImageFont.truetype(font_path, 42) # 标题加大到42
     except IOError:
-        st.warning("⚠️ 未检测到 font.ttf 字体文件，图片中文可能无法正常显示。")
         font = ImageFont.load_default()
         title_font = font
 
-    draw.text((40, 40), "Listing 深度评审报告", font=title_font, fill=(255, 204, 0))
-    draw.line([(40, 95), (760, 95)], fill=(60, 60, 65), width=2)
+    # 6. 绘制标题与分割线
+    draw.text((margin_x, margin_y), "Listing 深度评审报告", font=title_font, fill=(255, 204, 0))
+    draw.line([(margin_x, margin_y + 70), (img_width - margin_x, margin_y + 70)], fill=(60, 60, 65), width=2)
 
-    y_text = 120
+    # 7. 逐行绘制正文文字
+    y_text = margin_y + 120
     for line in lines:
         text_color = (255, 255, 255) if line.startswith("#") else (200, 200, 200)
-        draw.text((40, y_text), line, font=font, fill=text_color)
+        draw.text((margin_x, y_text), line, font=font, fill=text_color)
         y_text += line_height
 
+    # 8. 导出高清图片
     img_byte_arr = io.BytesIO()
-    img.save(img_byte_arr, format='JPEG', quality=95)
+    img.save(img_byte_arr, format='JPEG', quality=100)
     return img_byte_arr.getvalue()
-
 
 # ==========================================
 # 主界面代码
