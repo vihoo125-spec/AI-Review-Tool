@@ -21,7 +21,7 @@ style_option = st.sidebar.selectbox(
 # 3. 主界面：上传与预览区
 uploaded_file = st.file_uploader("请拖拽上传您的 A+ 页面或视觉方案 (支持 JPG/PNG)", type=['jpg', 'jpeg', 'png'])
 
-if uploaded_file is not None:
+ if uploaded_file is not None:
     img = Image.open(uploaded_file)
     st.image(img, caption="当前待评审方案", use_container_width=True)
 
