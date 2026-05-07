@@ -8,7 +8,6 @@ st.title("👁️ Listing 方案一键评审台")
 
 # 2. 左侧边栏：配置参数
 st.sidebar.header("⚙️ 核心配置")
-api_key = st.sidebar.text_input("1. 请输入您的 API Key", type="password")
 
 # 针对您可能的高级视觉产出，设置了精细化的评审预设
 style_option = st.sidebar.selectbox(
@@ -27,13 +26,12 @@ if uploaded_file is not None:
     st.image(img, caption="当前待评审方案", use_container_width=True)
 
     # 4. 触发评审逻辑
-    if st.button("🚀 开始深度评审", type="primary"):
-        if not api_key:
-            st.error("⚠️ 请先在左侧输入您的 API Key！")
-        else:
-            with st.spinner("AI 视觉专家正在进行像素级分析，请稍候..."):
-                try:
-                    genai.configure(api_key=api_key)
+   if st.button("🚀 开始深度评审", type="primary"):
+     with st.spinner("AI 视觉专家正在进行像素级分析，请稍候..."):
+         try:
+             # 核心修改：让代码从 Streamlit 的云端保险箱里读取密钥
+             api_key = st.secrets["GEMINI_API_KEY"]
+             genai.configure(api_key=api_key)
                     # 调用目前最强大的多模态模型
                     model = genai.GenerativeModel('gemini-2.5-flash')
                     
