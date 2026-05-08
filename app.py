@@ -20,7 +20,8 @@ EXPERT_PROMPTS = {
 # ==========================================
 # 辅助函数：将纯文本排版并渲染为高质量 JPG 长图
 # ==========================================
-def create_report_image(text, font_path="font.ttf"):
+# ⚠️ 注意：这里已经将默认字体后缀改为了大写的 .TTF
+def create_report_image(text, font_path="font.TTF"):
     img_width = 1200
     margin_x = 80
     margin_y = 80
@@ -40,10 +41,11 @@ def create_report_image(text, font_path="font.ttf"):
     draw = ImageDraw.Draw(img)
     
     try:
+        # 这里会去读取您的 font.TTF
         font = ImageFont.truetype(font_path, 28)
         title_font = ImageFont.truetype(font_path, 42)
     except IOError:
-        st.warning("⚠️ 未检测到 font.ttf 字体文件，图片中文可能无法正常显示。")
+        st.warning(f"⚠️ 未检测到 {font_path} 字体文件，图片中文可能无法正常显示。请确保文件名大小写完全一致。")
         font = ImageFont.load_default()
         title_font = font
 
@@ -69,7 +71,6 @@ st.title("👁️ 鞋履 Listing 方案一键评审台")
 
 st.sidebar.header("⚙️ 核心配置")
 
-# 使用新的鞋履分类字典的键作为下拉菜单选项
 style_option = st.sidebar.selectbox(
     "选择当前设计方案的主题风格", 
     list(EXPERT_PROMPTS.keys())
@@ -84,44 +85,43 @@ if uploaded_file is not None:
     if st.button("🚀 开始深度评审", type="primary"):
         with st.spinner(f"【{style_option}】专属视觉专家正在进行分析，请稍候..."):
             try:
-                # 获取密钥并配置模型
                 api_key = st.secrets["GEMINI_API_KEY"]
                 genai.configure(api_key=api_key)
                 model = genai.GenerativeModel('gemini-2.5-flash')
                 
-                # 获取当前选中风格的专属评审词
                 expert_focus = EXPERT_PROMPTS[style_option]
                 
-                # 全面升级的提示词大脑
+                # ⚠️ 提示词大脑深度重写：强制要求拆分双端评价
                 system_prompt = f"""
                 你是一个冷静、客观且具有批判性思维的资深商业视觉设计专家。
                 
-                【当前评审对象分析规则】
-                用户上传的图片是一套鞋履电商Listing视觉方案。你需要具备敏锐的空间和媒介感知能力：
-                1. 区分设备：请观察画面尺寸，若包含极长的竖版宽图通常为PC端A+，若包含较窄的长图则为手机端适配版，请在评审时指出两端在排版上的优劣。
-                2. 识别轮播图：如果画面中存在几张正方形或固定比例的图片横向排列，这代表是“主图或副图的轮播图”，请务必考量其横向滑动的阅读连贯性、视觉节奏和卖点递进逻辑。
+                【特别分析指令：同图双端独立评审】
+                请极其注意：用户上传的是一张拼图稿件，里面**同时包含了 PC端（通常为较宽的排版）和 手机端（通常为较窄的竖排长图）**的设计方案。如果画面中有横向排列的图片组合，那是轮播图。
+                你必须在脑内强制将其拆解为两个独立的载体！在接下来的评审中，必须明确区分出“对PC端的评价”和“对手机端的评价”。
                 
                 【专家人设与专属标准】
                 当前设计方案品类为：【{style_option}】。
                 作为该细分领域的绝对专家，你的核心评审侧重点是：{expert_focus}
                 
                 【输出要求】
-                请严格按照以下5个模块输出结构化报告，不要省略任何模块：
+                请严格按照以下5个模块输出结构化报告：
                 
                 ### 1. 综合视觉评分（1-10分）
-                （只给出一个具体数字，并用一句话犀利地点评第一眼的视觉冲击力）
+                （给出一个总分，并用一句话犀利地点评第一眼的整体视觉冲击力）
                 
                 ### 2. 视觉焦点热力分析与优化建议
-                （结合PC/移动端的尺寸差异，以及横向轮播图的浏览习惯，分析消费者的视觉落点是否正确引导至核心细节，指出当前排版缺陷并给出优化建议）
+                * **PC端表现：**（分析宽屏下的视觉引导是否合理）
+                * **手机端表现：**（分析窄屏下的留白、主体占比是否聚焦）
                 
-                ### 3. 卖点提炼、视觉表达、文案撰写的分析与优化建议
-                （点评文案是否支撑了视觉，视觉是否准确传达了该鞋履品类的调性，字体与排版是否易读且高级）
+                ### 3. 卖点提炼与文案视觉表达
+                * **PC端表现：**（评价排版节奏与文案信息层级）
+                * **手机端表现：**（特别评价手机端字号是否过小影响阅读，以及横向轮播图的连贯性）
                 
                 ### 4. 给设计师的避坑指南
-                （以资深总监的口吻，指出当前稿件中可能导致“显得廉价”、“转化率下降”或“引流不准”的逻辑漏洞或审美重灾区）
+                （以资深总监的口吻，指出当前在双端适配或整体调性上，最容易导致“显廉价”或“降低转化”的致命错误）
                 
                 ### 5. 总结优化清单
-                （提炼出最核心的 3 条直接修改行动指令，作为设计师的 To-Do List）
+                （提炼出最核心的 3-5 条直接修改行动指令，作为设计师的 To-Do List）
                 """
                 
                 response = model.generate_content([system_prompt, img])
@@ -131,7 +131,7 @@ if uploaded_file is not None:
                 st.markdown(response.text)
                 st.markdown("---")
                 
-                jpg_data = create_report_image(response.text, font_path="font.ttf")
+                jpg_data = create_report_image(response.text, font_path="font.TTF")
                 
                 col1, col2 = st.columns(2)
                 with col1:
