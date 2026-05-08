@@ -87,7 +87,7 @@ if uploaded_file is not None:
             try:
                 api_key = st.secrets["GEMINI_API_KEY"]
                 genai.configure(api_key=api_key)
-                model = genai.GenerativeModel('gemini-2.5-flash')
+                model = genai.GenerativeModel('gemini-2.5--pro')
                 
                 expert_focus = EXPERT_PROMPTS[style_option]
                 
