@@ -149,7 +149,7 @@ if uploaded_file is not None:
             api_key = st.secrets["GEMINI_API_KEY"]
             genai.configure(api_key=api_key)
             # 使用您反馈的极速预览版模型
-            model = genai.GenerativeModel('gemini-1.5-flash') 
+            model = genai.GenerativeModel('gemini-3-flash-preview') 
             
             response = model.generate_content([system_prompt, img])
             
