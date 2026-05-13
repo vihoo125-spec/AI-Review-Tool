@@ -8,7 +8,7 @@ import io
 # 专家知识库：基于 Bruno Marc 品牌品类精细化梳理
 # ==========================================
 EXPERT_PROMPTS = {
-    "通用系列": "无需叠加特定材质或场景要求，请纯粹以最高标准的通用商业视觉法则进行严苛评审。",
+    "通用系列": "无需叠加特定材质 or 场景要求，请纯粹以最高标准的通用商业视觉法则进行严苛评审。",
     "BM-正装系列 (Dress Shoes)": "在此基础上，重点评审其经典英伦/商务感的呈现，苛求鞋头（Toe-cap）轮廓的锋利度、缝线细节的精致感，以及画面是否传达出‘职场精英’的稳重与高端质感。",
     "BM-乐福/休闲系列 (Loafers)": "在此基础上，重点评审‘Smart Casual’风格的平衡点，强调‘一脚蹬’的穿脱便利性视觉暗示、皮面或麂皮的柔软褶皱感，以及画面是否传达出松弛、优雅的意式度假或通勤氛围。",
     "BM-靴类系列 (Boots)": "在此基础上，重点评审切尔西或查卡靴的线条流线性、鞋跟的稳重感以及材质的硬朗度。画面需传达出一种现代都市与粗犷美学结合的‘男性气概’。",
@@ -113,7 +113,7 @@ if uploaded_file is not None:
                 （着重分析 PC 端主图与关联图的视觉引导、构图比例、光影处理是否达到了 BM 品牌要求的专业水准）
                 
                 ### 3. 卖点契合度与文案优化
-                （评价画面是否精准支撑了核心功能卖点；直接提供更具‘美式风格’、更具转化率的英语文案改写建议及中文释义）
+                （评价画面传达的信息是否精准支撑了核心功能卖点；直接提供更具‘美式风格’、更具转化率的英语文案改写建议及中文释义）
                 
                 ### 4. 致命缺陷预警
                 （一针见血地指出当前最容易导致‘显廉价’、‘假货感’或‘跳失率高’的致命设计缺陷）
@@ -122,24 +122,11 @@ if uploaded_file is not None:
                 （提炼出 3-5 条直接修改行动指令，作为设计师的执行标准）
                 """
 
-                api_keys = st.secrets["GEMINI_API_KEYS"]
-                success = False
-                
-                for key in api_keys:
-                    try:
-                        genai.configure(api_key=key)
-                        model = genai.GenerativeModel('gemini-2.5-flash')
-                        response = model.generate_content([system_prompt, img])
-                        success = True
-                        break 
-                    except Exception as e:
-                        if "429" in str(e) or "Quota" in str(e) or "exhausted" in str(e).lower():
-                            continue 
-                        else:
-                            raise e 
-                
-                if not success:
-                    raise Exception("所有的 API Key 均已达到调用上限，请稍后重试。")
+                # 核心配置：已切换为最新的 gemini-3.1-pro-preview
+                api_key = st.secrets["GEMINI_API_KEY"]
+                genai.configure(api_key=api_key)
+                model = genai.GenerativeModel('gemini-3.1-pro-preview')
+                response = model.generate_content([system_prompt, img])
                 
                 st.success("✅ 评审完成！")
                 st.markdown("---")
