@@ -99,10 +99,10 @@ def create_report_image(text, font_path="font.TTF"):
 st.set_page_config(page_title="BM 视觉专家评审系统", layout="wide")
 st.title("👞 BM Listing 方案一键评审")
 
-st.sidebar.header("⚙️ 评审参数配置")
+st.sidebar.header("参数配置")
 shoe_val = st.sidebar.selectbox("选择品类", list(SHOE_STYLES.keys()))
 occ_val = st.sidebar.selectbox("选择场所", list(OCCASIONS.keys()))
-is_leather = st.sidebar.toggle("是否包含真皮材质", value=False)
+is_leather = st.sidebar.toggle("真皮系列", value=False)
 
 uploaded_file = st.file_uploader("上传设计方案 (JPG/PNG)", type=['jpg', 'jpeg', 'png'])
 
