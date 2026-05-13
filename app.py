@@ -4,57 +4,93 @@ from PIL import Image, ImageDraw, ImageFont
 import textwrap
 import io
 import time
+import re
 
 # ==========================================
-# 专家知识库：款式与场所的交叉商业逻辑 (已增加中英对照)
+# 专家知识库：款式与场所的中英对照逻辑
 # ==========================================
 SHOE_STYLES = {
-    "牛津鞋 (Oxfords)": "评审重点：作为最经典的鞋款，需平衡正式感与现代感。关注鞋楦线条的流畅度、布洛克雕花的视觉排布，以及在不同场所下的‘体面感’表达。",
-    "休闲运动鞋 (Sneakers)": "评审重点：强调轻盈、科技与都市动感。关注大底材质的视觉表达、鞋面网格的透气感展示，以及整体画面的活力氛围。",
-    "正装鞋 (Dress Shoes)": "评审重点：纯正商务属性。关注皮面反光的处理策划、缝线的严谨度，以及画面是否传达出绝对的专业与稳重。",
-    "乐福鞋 (Loafers)": "评审重点：松弛感与便利性。关注穿脱开口的舒适暗示、材质的柔韧度表达，以及半休闲状态下的优雅调性。",
-    "靴类 (Boots)": "评审重点：轮廓美学与材质层次。关注鞋帮高度带来的保护感暗示、粗犷与精致的视觉冲突，以及硬朗的线条表达。",
-    "一脚蹬/便鞋 (Slip-ons)": "评审重点：极致便利与日常舒适。关注弹力带/开口的细节、内里柔软度的视觉呈现，以及居家或通勤的亲和力。"
+    "牛津鞋 (Oxfords)": "正式感与现代感的平衡，关注鞋楦线条及布洛克细节。",
+    "休闲运动鞋 (Sneakers)": "强调轻盈科技与都市动感，关注材质透气感及画面活力。",
+    "正装鞋 (Dress Shoes)": "纯正商务属性，关注缝线严谨度及稳重调性。",
+    "乐福鞋 (Loafers)": "松弛优雅，关注穿脱便利性及皮质柔韧度。",
+    "靴类 (Boots)": "轮廓美学与硬朗层次，关注男性气概的视觉传达。",
+    "一脚蹬/便鞋 (Slip-ons)": "极致便利与居家/通勤的亲和力表达。"
 }
 
 OCCASIONS = {
-    "日常百搭 (Daily Essentials)": "视觉基调：亲切、高频、实穿。背景应具有生活气息，光影应自然均匀，文案应强调耐穿与百搭。",
-    "商务职场 (Business-Ready)": "视觉基调：权威、精干、专业。背景应简洁有力（如现代办公建筑），冷色调为主，文案应强调职场身份与品质感。",
-    "休闲度假 (Casual & Leisure)": "视觉基调：松弛、自由、柔和。背景应具户外或咖啡馆气息，光线温润，文案应强调心情的释放与脚感的舒适。",
-    "特殊/正式场合 (Special Occasions)": "视觉基调：奢华、尊贵、戏剧性。背景应具高级感（如宴会大厅或暗调影棚），光影对比度高，强调独特性与社交溢价。"
+    "日常百搭 (Daily Essentials)": "生活气息背景，自然光影，强调耐穿百搭。",
+    "商务职场 (Business-Ready)": "简洁有力背景，冷色调，强调专业身份。",
+    "休闲度假 (Casual & Leisure)": "户外/咖啡馆氛围，温润光线，强调脚感舒适。",
+    "特殊/正式场合 (Special Occasions)": "高级感/暗调背景，高对比度光影，强调社交溢价。"
 }
 
 # ==========================================
-# 辅助函数：生成 JPG 报告
+# 辅助函数：生成纯净排版的 JPG 报告 (移除 Markdown 符号)
 # ==========================================
 def create_report_image(text, font_path="font.TTF"):
+    # 1. 预处理文本：移除 Markdown 符号
+    clean_text = text.replace("**", "").replace("__", "")
+    
     img_width = 1200
     margin_x = 80
     margin_y = 80
-    lines = []
-    for paragraph in text.split('\n'):
-        wrapped = textwrap.wrap(paragraph, width=38) 
-        if not wrapped: lines.append("")
-        else: lines.extend(wrapped)
-    line_height = 46
-    img_height = max(1000, len(lines) * line_height + 300)
+    line_height = 50
+    
+    # 2. 准备排版行
+    processed_lines = []
+    raw_paragraphs = clean_text.split('\n')
+    
+    for p in raw_paragraphs:
+        if not p.strip():
+            processed_lines.append(("EMPTY", ""))
+            continue
+        
+        # 识别标题行并移除 #
+        if p.startswith('#'):
+            title_content = p.replace('#', '').strip()
+            processed_lines.append(("TITLE", title_content))
+        else:
+            # 正文自动换行
+            wrapped = textwrap.wrap(p, width=42)
+            for w_line in wrapped:
+                processed_lines.append(("BODY", w_line))
+
+    # 3. 计算高度
+    img_height = len(processed_lines) * line_height + 300
     img = Image.new('RGB', (img_width, img_height), color=(24, 24, 28))
     draw = ImageDraw.Draw(img)
+    
     try:
-        font = ImageFont.truetype(font_path, 28)
-        title_font = ImageFont.truetype(font_path, 42)
-    except IOError:
-        font = ImageFont.load_default()
-        title_font = font
-    draw.text((margin_x, margin_y), "BM Listing 方案深度评审报告", font=title_font, fill=(255, 204, 0))
-    draw.line([(margin_x, margin_y + 70), (img_width - margin_x, margin_y + 70)], fill=(60, 60, 65), width=2)
-    y_text = margin_y + 120
-    for line in lines:
-        text_color = (255, 255, 255) if line.startswith("#") else (200, 200, 200)
-        draw.text((margin_x, y_text), line, font=font, fill=text_color)
-        y_text += line_height
+        font_body = ImageFont.truetype(font_path, 28)
+        font_title = ImageFont.truetype(font_path, 38)
+        font_main_title = ImageFont.truetype(font_path, 48)
+    except:
+        font_body = font_title = font_main_title = ImageFont.load_default()
+
+    # 4. 绘制页眉
+    draw.text((margin_x, margin_y), "BM Listing 视觉方案评审报告", font=font_main_title, fill=(255, 204, 0))
+    draw.line([(margin_x, margin_y + 80), (img_width - margin_x, margin_y + 80)], fill=(60, 60, 65), width=2)
+
+    # 5. 循环绘制
+    y_cursor = margin_y + 140
+    for l_type, content in processed_lines:
+        if l_type == "TITLE":
+            y_cursor += 20
+            draw.text((margin_x, y_cursor), content, font=font_title, fill=(255, 204, 0))
+            y_cursor += line_height + 10
+        elif l_type == "BODY":
+            # 识别列表符号并稍微缩进
+            x_pos = margin_x
+            if content.strip().startswith('-') or content.strip().startswith('·'):
+                x_pos += 20
+            draw.text((x_pos, y_cursor), content, font=font_body, fill=(210, 210, 215))
+            y_cursor += line_height
+        elif l_type == "EMPTY":
+            y_cursor += 30
+
     img_byte_arr = io.BytesIO()
-    img.save(img_byte_arr, format='JPEG', quality=100)
+    img.save(img_byte_arr, format='JPEG', quality=95)
     return img_byte_arr.getvalue()
 
 # ==========================================
@@ -63,98 +99,79 @@ def create_report_image(text, font_path="font.TTF"):
 st.set_page_config(page_title="BM 视觉专家评审系统", layout="wide")
 st.title("👞 BM Listing 方案一键评审")
 
-# 侧边栏配置
 st.sidebar.header("⚙️ 评审参数配置")
-shoe_val = st.sidebar.selectbox("1. 选择鞋子款式 (Shoes)", list(SHOE_STYLES.keys()))
-occ_val = st.sidebar.selectbox("2. 选择适用场所 (Occasions)", list(OCCASIONS.keys()))
-is_leather = st.sidebar.toggle("3. 是否包含真皮材质", value=False)
+shoe_val = st.sidebar.selectbox("选择品类", list(SHOE_STYLES.keys()))
+occ_val = st.sidebar.selectbox("选择场所", list(OCCASIONS.keys()))
+is_leather = st.sidebar.toggle("是否包含真皮材质", value=False)
 
-uploaded_file = st.file_uploader("请上传方案拼图稿 (支持预览图/设计方案稿)", type=['jpg', 'jpeg', 'png'])
+uploaded_file = st.file_uploader("上传设计方案 (JPG/PNG)", type=['jpg', 'jpeg', 'png'])
 
 if uploaded_file is not None:
     img = Image.open(uploaded_file)
-    # 图片物理提速压缩
     img.thumbnail((1024, 1024))
     st.image(img, caption="当前待评审方案", use_container_width=True)
 
     if st.button("🚀 开始专家级深度评审", type="primary"):
-        # 实时进度条系统
-        progress_container = st.empty()
-        status_container = st.status("正在初始化评审引擎...", expanded=True)
+        # 1. 初始化百分比进度条
+        progress_bar = st.progress(0)
+        status_text = st.empty()
         
-        with status_container:
-            st.write("🔍 正在载入款式与场所专家知识库...")
-            time.sleep(0.5)
-            st.write("🧠 正在激活‘视觉总监’与‘消费者’双重人格...")
-            time.sleep(0.5)
-            st.write("💎 正在生成特定材质审查逻辑...")
-            time.sleep(0.5)
+        status_text.text("正在初始化专家大脑... 15%")
+        progress_bar.progress(15)
+        time.sleep(0.4)
+        
+        status_text.text("正在分析款式与场所契合度... 40%")
+        progress_bar.progress(40)
+        
+        try:
+            leather_prompt = ""
+            if is_leather:
+                leather_prompt = "\n【真皮专项审查】：方案需体现‘真皮体感’。评审光影策划是否预留了表现纹理的空间，背景是否支撑真皮的高级感。"
+
+            system_prompt = f"""
+            你是一名【资深商业视觉总监】和【挑剔买家】。评审 Bruno Marc (BM) 亚马逊 A+ 方案。
+            款式：{shoe_val} | 场所：{occ_val} | {'真皮' if is_leather else '常规材质'}{leather_prompt}
+
+            【输出要求：模块3必须中英对照】
+            ### 1. 综合视觉定调
+            ### 2. 焦点路径与构图诊断
+            ### 3. 卖点表达与文案优化 (Bilingual Review)
+            - 视觉匹配诊断：(中文说明)
+            - 视觉修改方案：(中文说明)
+            - 文案优化建议：(必须提供中英对照格式，例如：'Cloud-like Comfort (如云朵般舒适的脚感)')，且英文长度必须适配排版空间。
+            ### 4. 致命缺陷预警
+            ### 5. 落地执行清单 (To-Do List)
+            """
+
+            status_text.text("AI 正在像素级扫描画面细节... 75%")
+            progress_bar.progress(75)
+
+            api_key = st.secrets["GEMINI_API_KEY"]
+            genai.configure(api_key=api_key)
+            # 使用您反馈的极速预览版模型
+            model = genai.GenerativeModel('gemini-1.5-flash') 
             
-            try:
-                # 动态构建材质逻辑（方案稿导向）
-                leather_prompt = ""
-                if is_leather:
-                    leather_prompt = "\n【真皮方案专项审查】：由于该款为真皮，方案需体现‘真皮体感’。重点评审：光影策划是否预留了表现皮革纹理的空间？背景与道具是否匹配真皮的高级感？是否成功营造出昂贵材质的视觉叙事，而不仅仅是展示一张图。"
+            response = model.generate_content([system_prompt, img])
+            
+            status_text.text("正在生成纯净版长图报告... 95%")
+            progress_bar.progress(95)
+            
+            jpg_data = create_report_image(response.text, font_path="font.TTF")
+            
+            progress_bar.progress(100)
+            status_text.text("评审已就绪！")
+            time.sleep(0.5)
+            status_text.empty()
+            progress_bar.empty()
 
-                # 核心提示词
-                system_prompt = f"""
-                你是一名拥有15年经验的【资深商业视觉总监】，同时也是一名【极度挑剔的普通消费者】。
-                你现在评审的是 Bruno Marc (BM) 品牌的亚马逊 A+ 设计方案稿。
+            st.success("专家报告已生成：")
+            st.markdown(response.text)
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.download_button(label="📥 下载 TXT 报告", data=response.text, file_name="BM_Report.txt")
+            with col2:
+                st.download_button(label="🖼️ 保存为 JPG 纯净版长图", data=jpg_data, file_name="BM_Review_Poster.jpg", mime="image/jpeg")
                 
-                【评审上下文】
-                - 款式：{shoe_val} ({SHOE_STYLES[shoe_val]})
-                - 场所：{occ_val} ({OCCASIONS[occ_val]})
-                - 材质：{'真皮' if is_leather else '常规材质'}{leather_prompt}
-
-                【双重身份准则】
-                1. 视觉专家：关注构图平衡、视觉动线、排版空间、光影逻辑、品牌调性。
-                2. 普通消费者：关注‘我是否被吸引？’、‘卖点我读懂了吗？’、‘这双鞋看起来值得买吗？’。
-
-                【输出要求：严格按以下5模块】
-                
-                ### 1. 综合视觉定调
-                （综合总监视角与消费者第一感官，一句话点评方案的商业冲击力与场所契合度。）
-                
-                ### 2. 焦点路径与构图诊断
-                （着重分析 PC 端。视觉动线是否顺畅？主体与细节比例是否合理？是否为后续修图预留了表现材质（尤其是{shoe_val}特征）的光影空间？）
-                
-                ### 3. 卖点表达与文案空间匹配
-                （第一步：审查画面视觉是否传达出了文案所写的卖点，若没有，请指出视觉上的缺失。
-                第二步：针对缺失点提供具体的视觉修改建议。
-                第三步：看文案是否有更具转化的表达，**必须注意**：新文案的字符长度必须与当前画面的排版空间完美匹配，严禁建议过长文案。）
-                
-                ### 4. 致命缺陷预警
-                （指出当前方案中可能导致‘显廉价’、‘信息混乱’或‘跳失’的设计瑕疵。若手机端有重大排版灾难，请一并指出。）
-                
-                ### 5. 落地执行清单 (To-Do List)
-                （提供 3-5 条清晰的行动指令，作为设计师下一步修改的硬性指标。）
-                """
-
-                st.write("🚀 正在将像素信息发送至极速 AI 预览服务器...")
-                
-                # 调用模型（您可根据您的极速 API 配置自由保留 gemini-2.5-flash 或预览版）
-                api_key = st.secrets["GEMINI_API_KEY"]
-                genai.configure(api_key=api_key)
-                model = genai.GenerativeModel('gemini-2.5-flash') 
-                
-                response = model.generate_content([system_prompt, img])
-                
-                st.write("📊 正在渲染高质量评审长图...")
-                jpg_data = create_report_image(response.text, font_path="font.TTF")
-                
-                status_container.update(label="✅ 评审任务已圆满完成！", state="complete", expanded=False)
-
-                # 展示结果
-                st.success("专家报告已生成：")
-                st.markdown(response.text)
-                st.markdown("---")
-                
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.download_button(label="📥 下载 TXT 报告", data=response.text, file_name=f"BM_Review_Report.txt")
-                with col2:
-                    st.download_button(label="🖼️ 保存为 JPG 长图海报", data=jpg_data, file_name=f"BM_Review_Poster.jpg", mime="image/jpeg")
-                    
-            except Exception as e:
-                status_container.update(label="❌ 评审中断", state="error")
-                st.error(f"调用 AI 失败: {e}")
+        except Exception as e:
+            st.error(f"调用 AI 失败: {e}")
