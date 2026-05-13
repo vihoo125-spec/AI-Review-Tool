@@ -130,7 +130,7 @@ if uploaded_file is not None:
 
             # 核心指令重构：找回了端次与轮播图规则
             system_prompt = f"""
-            你是一名【资深商业视觉总监】和【挑剔买家】。评审 Bruno Marc (BM) 亚马逊 A+ 方案。
+            你是一名【资深商业视觉总监】和【挑剔买家】。无需照顾我的个人情绪，请务必客观评审 Bruno Marc (BM) 亚马逊 A+ 方案。
             款式：{shoe_val} | 场所：{occ_val} | {'真皮' if is_leather else '常规材质'}{leather_prompt}
 
             【特别分析指令：端次优先级与排版识别】
