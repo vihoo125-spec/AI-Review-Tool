@@ -125,7 +125,7 @@ if uploaded_file is not None:
                 # 核心配置：已切换为最新的 gemini-3.1-pro-preview
                 api_key = st.secrets["GEMINI_API_KEY"]
                 genai.configure(api_key=api_key)
-                model = genai.GenerativeModel('gemini-3.1-pro-preview')
+                model = genai.GenerativeModel('gemini-3-flash-preview')
                 response = model.generate_content([system_prompt, img])
                 
                 st.success("✅ 评审完成！")
