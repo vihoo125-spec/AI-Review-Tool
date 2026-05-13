@@ -58,7 +58,7 @@ def create_report_image(text, font_path="font.TTF"):
 
     # 3. 计算高度
     img_height = len(processed_lines) * line_height + 300
-    img = Image.new('RGB', (img_width, img_height), color=(24, 24, 28))
+    img = Image.new('RGB', (img_width, img_height), color=(238, 238, 238))
     draw = ImageDraw.Draw(img)
     
     try:
@@ -69,7 +69,7 @@ def create_report_image(text, font_path="font.TTF"):
         font_body = font_title = font_main_title = ImageFont.load_default()
 
     # 4. 绘制页眉
-    draw.text((margin_x, margin_y), "BM Listing 视觉方案评审报告", font=font_main_title, fill=(255, 204, 0))
+    draw.text((margin_x, margin_y), "BM Listing 视觉方案评审报告", font=font_main_title, fill=(28, 96, 255))
     draw.line([(margin_x, margin_y + 80), (img_width - margin_x, margin_y + 80)], fill=(60, 60, 65), width=2)
 
     # 5. 循环绘制
@@ -77,14 +77,14 @@ def create_report_image(text, font_path="font.TTF"):
     for l_type, content in processed_lines:
         if l_type == "TITLE":
             y_cursor += 20
-            draw.text((margin_x, y_cursor), content, font=font_title, fill=(255, 204, 0))
+            draw.text((margin_x, y_cursor), content, font=font_title, fill=(28, 96, 255))
             y_cursor += line_height + 10
         elif l_type == "BODY":
             # 识别列表符号并稍微缩进
             x_pos = margin_x
             if content.strip().startswith('-') or content.strip().startswith('·'):
                 x_pos += 20
-            draw.text((x_pos, y_cursor), content, font=font_body, fill=(210, 210, 215))
+            draw.text((x_pos, y_cursor), content, font=font_body, fill=(51, 51, 51))
             y_cursor += line_height
         elif l_type == "EMPTY":
             y_cursor += 30
