@@ -20,7 +20,6 @@ EXPERT_PROMPTS = {
 # ==========================================
 # 辅助函数：将纯文本排版并渲染为高质量 JPG 长图
 # ==========================================
-# ⚠️ 注意：这里已经将默认字体后缀改为了大写的 .TTF
 def create_report_image(text, font_path="font.TTF"):
     img_width = 1200
     margin_x = 80
@@ -41,7 +40,6 @@ def create_report_image(text, font_path="font.TTF"):
     draw = ImageDraw.Draw(img)
     
     try:
-        # 这里会去读取您的 font.TTF
         font = ImageFont.truetype(font_path, 28)
         title_font = ImageFont.truetype(font_path, 42)
     except IOError:
@@ -83,15 +81,10 @@ if uploaded_file is not None:
     st.image(img, caption="当前待评审方案", use_container_width=True)
 
     if st.button("🚀 开始深度评审", type="primary"):
-        with st.spinner(f"【{style_option}】专属视觉专家正在进行分析，请稍候..."):
+        with st.spinner("AI 视觉专家正在进行像素级分析，请稍候..."):
             try:
-                api_key = st.secrets["GEMINI_API_KEY"]
-                genai.configure(api_key=api_key)
-                model = genai.GenerativeModel('gemini-2.5-flash')
-                
+                # 0. 提前组装好专属提示词（修复了顺序错位问题）
                 expert_focus = EXPERT_PROMPTS[style_option]
-                
-                # ⚠️ 提示词大脑深度重写：强制要求拆分双端评价
                 system_prompt = f"""
                 你是一个冷静、客观且具有批判性思维的资深商业视觉设计专家，如果我的观点存在事实错误、逻辑漏洞或认知偏差，请直接予以纠正，不要为了礼貌而顺从我。在给出建议时，请权衡利弊，提供多个视角的分析，而不仅仅是支持我的初步想法。
                 
@@ -123,9 +116,36 @@ if uploaded_file is not None:
                 ### 5. 总结优化清单
                 （提炼出最核心的 3-5 条直接修改行动指令，作为设计师的 To-Do List）
                 """
+
+                # 1. 从云端保险箱读取您的“钥匙串”数组
+                api_keys = st.secrets["GEMINI_API_KEYS"]
+                success = False
                 
-                response = model.generate_content([system_prompt, img])
+                # 2. 开启多 Key 故障转移轮询
+                for key in api_keys:
+                    try:
+                        genai.configure(api_key=key)
+                        model = genai.GenerativeModel('gemini-2.5-flash')
+                        
+                        # 尝试调用模型（现在系统认识 system_prompt 了）
+                        response = model.generate_content([system_prompt, img])
+                        success = True
+                        break # 如果成功输出，立刻跳出循环
+                        
+                    except Exception as e:
+                        error_msg = str(e)
+                        # 如果遇到 429 限流或额度用尽，自动切换到下一个 Key
+                        if "429" in error_msg or "Quota" in error_msg or "exhausted" in error_msg.lower():
+                            continue 
+                        else:
+                            # 其他核心错误直接抛出
+                            raise e 
                 
+                # 3. 兜底保障
+                if not success:
+                    raise Exception("所有的 API Key 均已达到调用上限（429 报错），请稍后重试或在后台补充新的 Key！")
+                
+                # 4. 正常的展示与渲染代码
                 st.success("✅ 评审完成！")
                 st.markdown("---")
                 st.markdown(response.text)
