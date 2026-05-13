@@ -128,9 +128,14 @@ if uploaded_file is not None:
             if is_leather:
                 leather_prompt = "\n【真皮专项审查】：方案需体现‘真皮体感’。评审光影策划是否预留了表现纹理的空间，背景是否支撑真皮的高级感。"
 
+            # 核心指令重构：找回了端次与轮播图规则
             system_prompt = f"""
             你是一名【资深商业视觉总监】和【挑剔买家】。评审 Bruno Marc (BM) 亚马逊 A+ 方案。
             款式：{shoe_val} | 场所：{occ_val} | {'真皮' if is_leather else '常规材质'}{leather_prompt}
+
+            【特别分析指令：端次优先级与排版识别】
+            1. 重点评审PC端：若拼图中同时包含 PC端（宽排版）和 手机端（窄竖排长图），评审重心必须绝对倾斜于 PC 端。对于手机端，除非存在影响阅读或认知的“重大错误”，否则直接无视。
+            2. 轮播图识别：如果方案中存在横向排列的图片组合，请理解为这是亚马逊的“轮播图模块”，按正常逻辑评估即可。
 
             【输出要求：模块3必须中英对照】
             ### 1. 综合视觉定调
@@ -148,7 +153,6 @@ if uploaded_file is not None:
 
             api_key = st.secrets["GEMINI_API_KEY"]
             genai.configure(api_key=api_key)
-            # 使用您反馈的极速预览版模型
             model = genai.GenerativeModel('gemini-3-flash-preview') 
             
             response = model.generate_content([system_prompt, img])
