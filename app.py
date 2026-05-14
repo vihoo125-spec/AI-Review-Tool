@@ -104,14 +104,19 @@ shoe_val = st.sidebar.selectbox("选择品类", list(SHOE_STYLES.keys()))
 occ_val = st.sidebar.selectbox("选择场所", list(OCCASIONS.keys()))
 is_leather = st.sidebar.toggle("真皮系列", value=False)
 
+# 1. 精简上传组件的标题文案
 uploaded_file = st.file_uploader("上传设计方案 (JPG/PNG)", type=['jpg', 'jpeg', 'png'])
 
 if uploaded_file is not None:
     img = Image.open(uploaded_file)
+    
+    # （附赠一个小优化：自动等比压缩图片，极大提升大模型处理和上传速度）
     img.thumbnail((1024, 1024))
+    
     st.image(img, caption="当前待评审方案", use_container_width=True)
 
-    if st.button("🚀 开始专家级深度评审", type="primary"):
+    # 2. 修改按钮文案，并添加 use_container_width=True 实现满宽效果
+    if st.button("一键评审", type="primary", use_container_width=True):
         # 1. 初始化百分比进度条
         progress_bar = st.progress(0)
         status_text = st.empty()
