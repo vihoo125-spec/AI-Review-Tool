@@ -104,8 +104,8 @@ shoe_val = st.sidebar.selectbox("选择品类", list(SHOE_STYLES.keys()))
 occ_val = st.sidebar.selectbox("选择场所", list(OCCASIONS.keys()))
 is_leather = st.sidebar.toggle("真皮系列", value=False)
 
-# 1. 精简上传组件的标题文案
-uploaded_file = st.file_uploader("上传设计方案 (JPG/PNG)", type=['jpg', 'jpeg', 'png'])
+# 恢复原版上传框提示语
+uploaded_file = st.file_uploader("请上传 A+ 页面拼图稿 (支持 JPG/PNG)", type=['jpg', 'jpeg', 'png'])
 
 if uploaded_file is not None:
     img = Image.open(uploaded_file)
@@ -115,8 +115,8 @@ if uploaded_file is not None:
     
     st.image(img, caption="当前待评审方案", use_container_width=True)
 
-    # 2. 修改按钮文案，并添加 use_container_width=True 实现满宽效果
-    if st.button("一键评审", type="primary", use_container_width=True):
+    # 恢复原版带火箭的按钮
+    if st.button("🚀 开始深度评审", type="primary"):
         # 1. 初始化百分比进度条
         progress_bar = st.progress(0)
         status_text = st.empty()
@@ -127,7 +127,23 @@ if uploaded_file is not None:
         
         status_text.text("正在分析款式与场所契合度... 40%")
         progress_bar.progress(40)
+        time.sleep(0.2)
         
+        status_text.text("正在提取核心视觉特征... 50%")
+        progress_bar.progress(50)
+        time.sleep(0.2)
+        
+        status_text.text("正在比对商业转化标准... 60%")
+        progress_bar.progress(60)
+        time.sleep(0.2)
+        
+        status_text.text("正在生成排版优化策略... 70%")
+        progress_bar.progress(70)
+        time.sleep(0.2)
+        
+        status_text.text("AI 正在像素级扫描画面细节... 75%")
+        progress_bar.progress(75)
+
         try:
             leather_prompt = ""
             if is_leather:
@@ -152,9 +168,6 @@ if uploaded_file is not None:
             ### 4. 致命缺陷预警
             ### 5. 落地执行清单 (To-Do List)
             """
-
-            status_text.text("AI 正在像素级扫描画面细节... 75%")
-            progress_bar.progress(75)
 
             api_key = st.secrets["GEMINI_API_KEY"]
             genai.configure(api_key=api_key)
